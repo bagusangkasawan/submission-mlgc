@@ -1,5 +1,5 @@
 // TODO: Silakan sesuaikan BASE URL dari endpoint Anda
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://submission-mlgc-bagusangkasawan-137627889446.asia-southeast2.run.app';
 
 const ENDPOINT = {
   predict: `${BASE_URL}/predict`,
