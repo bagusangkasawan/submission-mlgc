@@ -1,7 +1,8 @@
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { inferenceService } = require('./services/inferenceService');
 const { storeData } = require('./services/storeData');
 const { getHistories } = require('./services/getHistories');
+const InputError = require('./exceptions/InputError');
 
 const predictHandler = async (req, res) => {
   try {
@@ -13,27 +14,19 @@ const predictHandler = async (req, res) => {
     }
 
     const model = req.app.locals.model;
-    const imageBuffer = req.file.buffer;
+    const image = req.file.buffer;
 
-    // Run inference
-    const result = await inferenceService(model, imageBuffer);
-
-    const id = uuidv4();
+    const { label, suggestion } = await inferenceService(model, image);
+    const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
-
-    const isCancer = result > 0.5;
-    const suggestion = isCancer
-      ? 'Segera periksa ke dokter!'
-      : 'Penyakit kanker tidak terdeteksi.';
 
     const data = {
       id,
-      result: isCancer ? 'Cancer' : 'Non-cancer',
+      result: label,
       suggestion,
       createdAt,
     };
 
-    // Store to Firestore
     await storeData(id, data);
 
     return res.status(201).json({
@@ -42,6 +35,13 @@ const predictHandler = async (req, res) => {
       data,
     });
   } catch (error) {
+    if (error instanceof InputError) {
+      return res.status(error.statusCode).json({
+        status: 'fail',
+        message: error.message,
+      });
+    }
+
     console.error('Prediction error:', error);
     return res.status(400).json({
       status: 'fail',

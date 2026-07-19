@@ -1,7 +1,6 @@
-const tf = require('@tensorflow/tfjs');
+const tf = require('@tensorflow/tfjs-node');
 
 async function loadModel() {
-  await tf.setBackend('cpu');
   await tf.ready();
   console.log(`TF.js backend: ${tf.getBackend()}`);
 
